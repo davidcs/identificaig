@@ -20,4 +20,4 @@ EXPOSE 8080
 COPY --from=build /target/*.jar app.jar
 
 # Define o comando de entrada para rodar o JAR
-ENTRYPOINT [ "java", "-jar", "app.jar" ]
+ENTRYPOINT [ "java", "-jar", "app.jar", "--debug" ]
