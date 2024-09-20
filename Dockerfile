@@ -1,23 +1,30 @@
 # Etapa de construção
 FROM ubuntu:latest AS build
 
-# Atualiza pacotes e instala o JDK 17
-RUN apt-get update && apt-get install openjdk-17-jdk maven -y
+RUN apt-get update && apt-get install -y openjdk-17-jdk maven
 
-# Copia o conteúdo da aplicação para o contêiner
-COPY . .
+WORKDIR /app
 
-# Executa o Maven para compilar o projeto, sem rodar os testes
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+
+COPY src ./src
+
 RUN mvn clean install -DskipTests
 
 # Etapa de execução
 FROM openjdk:17-jdk-slim
 
-# Expõe a porta 8080
+WORKDIR /app
+
 EXPOSE 8080
 
-# Copia o arquivo JAR gerado (assumindo que existe apenas um JAR na pasta target)
-COPY --from=build /target/*.jar app.jar
+# Defina variáveis de ambiente (substitua pelos valores reais)
+ENV DATABASE_URL=jdbc:postgres://dpg-crmcgo23esus73fqv200-a:5432/potencial_ig
+ENV DATABASE_USERNAME=admin
+ENV DATABASE_PASSWORD=7ceZef7YUfCnSnIsKV6OoXubBq75RwSs
+ENV DATABASE_DRIVER_CLASS=org.postgresql.Driver
 
-# Define o comando de entrada para rodar o JAR
-ENTRYPOINT [ "java", "-jar", "app.jar", "--debug" ]
+COPY --from=build /app/target/*.jar app.jar
+
+ENTRYPOINT ["java", "-jar", "app.jar"]
